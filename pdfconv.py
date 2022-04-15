@@ -6,7 +6,7 @@ import pytesseract
 
 def img_to_str_tesseract(image_path, lang='chi_sim'):
     return pytesseract.image_to_string(Image.open(image_path), lang)
-  
+
 ######################################
 # 百度 OCR
 
@@ -48,7 +48,7 @@ def adjust(inpath, outpath):
     lines = f.readlines()
     arr = [len(line) for line in lines]
     length = np.median(arr) # 行字符数中值
-    
+
     string = ""
     for line in lines:
         if len(line) >= length and line[-1]=='\n':
@@ -68,7 +68,7 @@ def write_file(path, text, ftype, debug=False):
         f.write(text)
         f.close()
 
-# 删除文件  
+# 删除文件
 def remove(path):
     if not os.path.exists(path):
         return
@@ -86,23 +86,25 @@ def remove(path):
 
 # 解析PDF文件
 def parse(inpath, outpath):
-    remove(TMPDIR) # 清除临时目录 
+    remove(TMPDIR) # 清除临时目录
     os.mkdir(TMPDIR)
     remove(outpath) # 清除输出文件
 
-    t0 = time.clock()
+    # t0 = time.clock()
+    t0 = time.process_time()
     doc = fitz.open(inpath)
     lenXREF = doc.xrefLength()
     print("文件名:{}, 页数: {}, 对象: {}".format(inpath, len(doc), lenXREF - 1))
 
     imgcount = 0
     for i,page in enumerate(doc):
-        t1 = time.clock()
+        # t1 = time.clock()
+        t1 = time.process_time()
         # 文字
         text = page.get_text()
         if len(text) > 0:
              write_file(outpath, text, 'a')
-        # 图片        
+        # 图片
         imglist = page.get_images() # 解析该页中图片
         for item in imglist:
             xref = item[0]
@@ -111,11 +113,13 @@ def parse(inpath, outpath):
             # 如果pix.n<5,可以直接存为PNG
             path = os.path.join(TMPDIR, new_name)
             if pix.n < 5:
-                pix.writePNG(path)
+                pix.save(path)
+               # pix.writePNG(path)
             # 否则先转换CMYK
             else:
                 pix0 = fitz.Pixmap(fitz.csRGB, pix)
-                pix0.writePNG(path)
+                #pix0.writePNG(path)
+                pix0.save(path)
                 pix0 = None
             pix = None
             if OCR_ONLINE:
@@ -126,7 +130,7 @@ def parse(inpath, outpath):
             write_file(outpath, text, 'a')
             write_file(outpath, '\n' + '-----------' + '\n', 'a')
             imgcount += 1
-        print("page {} 运行时间:{}s".format(i, {t1 - t0}))
+        print("page {} 运行时间:{}s".format(i, t1 - t0))
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
