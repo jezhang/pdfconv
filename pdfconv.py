@@ -3,6 +3,7 @@
 
 from PIL import Image
 import pytesseract
+import re
 
 def img_to_str_tesseract(image_path, lang='chi_sim'):
     return pytesseract.image_to_string(Image.open(image_path), lang)
@@ -13,9 +14,9 @@ def img_to_str_tesseract(image_path, lang='chi_sim'):
 from aip import AipOcr
 
 config = {
-    'appId': '',
-    'apiKey': '',
-    'secretKey': ''
+    'appId': '25984655',
+    'apiKey': 'nNfljcq6QrMKv01XywmLL8ck',
+    'secretKey': '4280lAslNq3ORxWPBmm7NBhnZ45y5tsz'
 }
 
 client = AipOcr(**config)
@@ -40,7 +41,8 @@ import numpy as np
 
 TMPDIR = 'tmp/'
 PARSEIMG = True
-OCR_ONLINE = False
+OCR_ONLINE = True
+# OCR_ONLINE = False
 
 # 去掉文中多余的回车
 def adjust(inpath, outpath):
@@ -48,7 +50,7 @@ def adjust(inpath, outpath):
     lines = f.readlines()
     arr = [len(line) for line in lines]
     length = np.median(arr) # 行字符数中值
-
+    pattern = re.compile(r'([\u4e00-\u9fa5，]{1})\s+([\u4e00-\u9fa5，]{1})')
     string = ""
     for line in lines:
         if len(line) >= length and line[-1]=='\n':
@@ -57,6 +59,7 @@ def adjust(inpath, outpath):
             pass
         else:
             string += line
+        string = pattern.sub(r'\1\2', string)
     write_file(outpath, string, 'w')
     return
 
@@ -93,7 +96,7 @@ def parse(inpath, outpath):
     # t0 = time.clock()
     t0 = time.process_time()
     doc = fitz.open(inpath)
-    lenXREF = doc.xrefLength()
+    lenXREF = doc.xref_length()
     print("文件名:{}, 页数: {}, 对象: {}".format(inpath, len(doc), lenXREF - 1))
 
     imgcount = 0
@@ -130,7 +133,7 @@ def parse(inpath, outpath):
             write_file(outpath, text, 'a')
             write_file(outpath, '\n' + '-----------' + '\n', 'a')
             imgcount += 1
-        print("page {} 运行时间:{}s".format(i, t1 - t0))
+        print("page[{}]运行时间:{}s".format(i, t1 - t0))
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
