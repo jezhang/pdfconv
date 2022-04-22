@@ -41,8 +41,8 @@ import numpy as np
 
 TMPDIR = 'tmp/'
 PARSEIMG = True
-OCR_ONLINE = True
-# OCR_ONLINE = False
+# OCR_ONLINE = True
+OCR_ONLINE = False
 
 # 去掉文中多余的回车
 def adjust(inpath, outpath):
@@ -50,7 +50,7 @@ def adjust(inpath, outpath):
     lines = f.readlines()
     arr = [len(line) for line in lines]
     length = np.median(arr) # 行字符数中值
-    pattern = re.compile(r'([\u4e00-\u9fa5，]{1})\s+([\u4e00-\u9fa5，]{1})')
+    space_patten = re.compile(r'([\u4e00-\u9fa5])\s+([\u4e00-\u9fa5])')
     string = ""
     for line in lines:
         if len(line) >= length and line[-1]=='\n':
@@ -59,7 +59,8 @@ def adjust(inpath, outpath):
             pass
         else:
             string += line
-        string = pattern.sub(r'\1\2', string)
+        string = space_patten.sub(r'\1\2', string)
+        string = space_patten.sub(r'\1\2', string) # https://www.cxybb.com/article/LionAndBears/107025068
     write_file(outpath, string, 'w')
     return
 
